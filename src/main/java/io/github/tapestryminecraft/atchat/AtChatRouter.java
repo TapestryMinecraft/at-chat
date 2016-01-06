@@ -3,17 +3,17 @@ package io.github.tapestryminecraft.atchat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.channel.MessageReceiver;
 import io.github.tapestryminecraft.atchat.channels.AtChatChannel;
 
 public class AtChatRouter {
 	
 	// TODO save to database
-	static Map<MessageReceiver, AtChatChannel> previousChannels = new HashMap<MessageReceiver, AtChatChannel>();
+	static Map<UUID, AtChatChannel> previousChannels = new HashMap<UUID, AtChatChannel>();
 	
 	AtChatChannel channel;
 	AtChatMessage rawMessage;
@@ -60,11 +60,19 @@ public class AtChatRouter {
 	
 	
 	
-	private static AtChatChannel recallChannel(MessageReceiver sender) {
-		return previousChannels.get(sender);
+	private static AtChatChannel recallChannel(Player sender) {
+		AtChatChannel channel = previousChannels.get(sender.getUniqueId());
+		if (channel == null) {
+			recordChannel(sender, channel = defaultChannel(sender));
+		}
+		return channel;
 	}	
 	
-	private static void recordChannel(MessageReceiver sender, AtChatChannel channel) {
-		previousChannels.put(sender, channel);
+	private static void recordChannel(Player sender, AtChatChannel channel) {
+		previousChannels.put(sender.getUniqueId(), channel);
+	}
+	
+	private static AtChatChannel defaultChannel(Player sender) {
+		return AtChatChannel.fromChannelString(sender, "5");
 	}
 }
