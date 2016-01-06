@@ -16,8 +16,8 @@ public class PlayerChannel extends AtChatChannel{
 	
 	public PlayerChannel(Player sender, String name) {
 		this.sender = sender;
-		this.recipientName = name;
 		this.recipient = Sponge.getServer().getPlayer(name).get();
+		this.recipientName = recipient.getName();
 	}
 
 	public Collection<MessageReceiver> getMembers() {
@@ -32,7 +32,7 @@ public class PlayerChannel extends AtChatChannel{
 	}
 
 	@Override
-	public String textString() {
+	public String channelString() {
 		return this.recipientName;
 	}
 	

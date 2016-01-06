@@ -43,9 +43,14 @@ public class AtChatRouter {
 		} else if (this.rawMessage.hasChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
+			this.sendChannelUpdateNotice();
 			recordChannel(this.sender, this.channel);
 			
 		}
+	}
+	
+	private void sendChannelUpdateNotice() {
+		this.sender.sendMessage(Text.builder("Now chatting ").append(this.channel.channelText()).build());
 	}
 	
 	private void sendMessage() {
@@ -57,8 +62,6 @@ public class AtChatRouter {
 				.append(this.rawMessage.toText())
 				.build();
 	}
-	
-	
 	
 	private static AtChatChannel recallChannel(Player sender) {
 		AtChatChannel channel = previousChannels.get(sender.getUniqueId());

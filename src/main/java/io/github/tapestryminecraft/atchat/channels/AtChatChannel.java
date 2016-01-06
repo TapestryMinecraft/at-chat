@@ -11,17 +11,21 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 
 public abstract class AtChatChannel implements MessageChannel{
-	protected String channelName;
 	protected Player sender;
 	
 	public Text.Builder toBuilder() {
-		return Text.builder()
-				.append(Text.of(this.senderColor(), TextStyles.RESET, "[" + ((Player) this.sender).getName() + "] "))
-				.append(Text.of(this.channelColor(), TextStyles.ITALIC, "@" + this.textString() + " "))
-				;
+		return Text.builder().append(this.senderText()).append(this.channelText());
+	}
+	
+	public Text senderText() {
+		return Text.of(this.senderColor(), TextStyles.RESET, "[" + this.sender.getName() + "] ");
+	}
+	
+	public Text channelText() {
+		return Text.of(this.channelColor(), TextStyles.ITALIC, "@" + this.channelString() + " ");
 	}
 
-	protected abstract String textString();
+	protected abstract String channelString();
 	
 	protected TextColor channelColor() {
 		return TextColors.RESET;

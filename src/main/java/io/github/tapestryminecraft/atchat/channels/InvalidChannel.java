@@ -8,6 +8,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.channel.MessageReceiver;
 
 public class InvalidChannel extends AtChatChannel {
+	String channelName;
 	
 	public InvalidChannel(Player sender, String channelName) {
 		this.channelName = channelName;
@@ -21,8 +22,8 @@ public class InvalidChannel extends AtChatChannel {
 	}
 
 	@Override
-	protected String textString() {
-		return this.channelName;
+	protected String channelString() {
+		return this.channelName + " (invalid)";
 	}
 
 }

@@ -48,7 +48,7 @@ public class RangedChannel extends AtChatChannel {
 	}
 
 	@Override
-	public String textString() {
+	public String channelString() {
 		return Integer.toString(this.range);
 	}
 	
