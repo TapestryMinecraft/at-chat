@@ -1,6 +1,8 @@
 package io.github.tapestryminecraft.atchat;
 
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 
 public class AtChatMessage {
 	private String channel;
@@ -27,6 +29,10 @@ public class AtChatMessage {
 	
 	public boolean hasChannel() {
 		return this.channel.length() > 0;
+	}
+	
+	public Text toText() {
+		return Text.of(TextColors.RESET, TextStyles.RESET, this.body);
 	}
 	
 	private void setBody(String[] args) {
