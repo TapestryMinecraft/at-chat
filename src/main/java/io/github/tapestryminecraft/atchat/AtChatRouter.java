@@ -32,7 +32,7 @@ public class AtChatRouter {
 		
 		this.rawMessage = new AtChatMessage(event.getRawMessage());
 		
-		if (this.rawMessage.hasBody() && this.rawMessage.hasChannel()) {
+		if (this.rawMessage.includesBody() && this.rawMessage.includesChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
 			if (this.channel instanceof InvalidChannel) {
@@ -41,12 +41,12 @@ public class AtChatRouter {
 				this.sendMessage();
 			}
 			
-		} else if (this.rawMessage.hasBody()) {
+		} else if (this.rawMessage.includesBody()) {
 			
 			this.channel = recallChannel(this.sender);
 			this.sendMessage();
 			
-		} else if (this.rawMessage.hasChannel()) {
+		} else if (this.rawMessage.includesChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
 

@@ -28,6 +28,7 @@ public class PlayerChannel extends AtChatChannel{
 		Player player = Sponge.getServer().getPlayer(this.recipientId).get();
 		
 		members.add(player);
+		members.add(this.sender);
 		
 		return members;
 	}
