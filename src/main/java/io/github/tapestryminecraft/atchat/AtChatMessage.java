@@ -37,8 +37,9 @@ public class AtChatMessage {
 	
 	private void setBody(String[] args) {
 		StringBuilder body = new StringBuilder();
-		for (int i = this.hasChannel() ? 1 : 0; i < args.length; i++) {
-			body.append(args[i]);
+		int start = this.hasChannel() ? 1 : 0;
+		for (int i = start; i < args.length; i++) {
+			body.append((i == start ? "" : " ") + args[i]);
 		}
 		this.body = body.toString();
 	}

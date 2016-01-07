@@ -3,6 +3,7 @@ package io.github.tapestryminecraft.atchat.channels;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
@@ -12,11 +13,11 @@ import org.spongepowered.api.text.format.TextColors;
 
 public class PlayerChannel extends AtChatChannel{
 	private String recipientName;
-	private Player recipient;
+	private UUID recipientId;
 	
-	public PlayerChannel(Player sender, String name) {
+	public PlayerChannel(Player sender, Player recipient) {
 		this.sender = sender;
-		this.recipient = Sponge.getServer().getPlayer(name).get();
+		this.recipientId = recipient.getUniqueId();
 		this.recipientName = recipient.getName();
 	}
 
@@ -24,7 +25,7 @@ public class PlayerChannel extends AtChatChannel{
 		Set<MessageReceiver> members = new HashSet<MessageReceiver>();
 		
 		// TODO error checking, player is offline
-		Player player = Sponge.getServer().getPlayer(this.recipientName).get();
+		Player player = Sponge.getServer().getPlayer(this.recipientId).get();
 		
 		members.add(player);
 		
@@ -36,9 +37,9 @@ public class PlayerChannel extends AtChatChannel{
 		return this.recipientName;
 	}
 	
-	public boolean isValid() {
-		return this.recipient.isOnline();
-	}
+//	public boolean isValid() {
+//		return this.recipient.isOnline();
+//	}
 	
 	@Override
 	protected TextColor channelColor() {

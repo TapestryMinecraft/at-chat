@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
@@ -13,16 +14,23 @@ import org.spongepowered.api.text.format.TextStyles;
 public abstract class AtChatChannel implements MessageChannel{
 	protected Player sender;
 	
-	public Text.Builder toBuilder() {
-		return Text.builder().append(this.senderText()).append(this.channelText());
-	}
-	
 	public Text senderText() {
-		return Text.of(this.senderColor(), TextStyles.RESET, "[" + this.sender.getName() + "] ");
+		return Text.of(
+				this.senderColor(),
+				TextStyles.RESET,
+				TextActions.suggestCommand("@" + this.sender.getName() + " "),
+				"[" + this.sender.getName() + "] "
+				);
 	}
 	
 	public Text channelText() {
-		return Text.of(this.channelColor(), TextStyles.ITALIC, "@" + this.channelString() + " ");
+		String channelString = "@" + this.channelString() + " ";
+		return Text.of(
+				this.channelColor(),
+				TextStyles.ITALIC,
+				TextActions.suggestCommand(channelString),
+				channelString
+				);
 	}
 
 	protected abstract String channelString();
@@ -37,9 +45,9 @@ public abstract class AtChatChannel implements MessageChannel{
 
 	public static AtChatChannel fromChannelString(Player sender, String channelString) {
 		if (channelString.length() > 3) {
-			Optional<Player> player = Sponge.getServer().getPlayer(channelString);
-			if (player.isPresent()) {
-				return new PlayerChannel(sender, channelString);
+			Optional<Player> recipient = Sponge.getServer().getPlayer(channelString);
+			if (recipient.isPresent()) {
+				return new PlayerChannel(sender, recipient.get());
 			} else {
 				return new InvalidChannel(sender, channelString);
 			}

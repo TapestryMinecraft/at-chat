@@ -58,7 +58,9 @@ public class AtChatRouter {
 	}
 	
 	private Text buildMessage() {
-		return this.channel.toBuilder()
+		return Text.builder()
+				.append(this.channel.senderText())
+				.append(this.channel.channelText())
 				.append(this.rawMessage.toText())
 				.build();
 	}

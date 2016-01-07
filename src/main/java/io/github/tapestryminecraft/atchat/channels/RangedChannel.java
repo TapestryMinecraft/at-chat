@@ -18,7 +18,7 @@ public class RangedChannel extends AtChatChannel {
 	
 	public RangedChannel(Player sender, int range) {
 		this.sender = sender;
-		this.range = range;
+		this.range = Math.abs(range);
 	}
 
 	public Collection<MessageReceiver> getMembers() {
