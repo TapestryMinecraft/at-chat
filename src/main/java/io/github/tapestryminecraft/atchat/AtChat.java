@@ -41,10 +41,10 @@ public class AtChat {
 			Collection<Player> players = Sponge.getServer().getOnlinePlayers();
 			
 			for (Player player : players) {
-				completions.add("@" + player.getName());
+				if (player.getName().toLowerCase().startsWith(message.getChannel().toLowerCase())) {
+					completions.add("@" + player.getName());
+				}
 			}
-			
-			// TODO filter by already-typed characters
 		}
 	}
 }
