@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
+
 import io.github.tapestryminecraft.atchat.channels.AtChatChannel;
 
 public class AtChatRouter {
@@ -43,14 +44,10 @@ public class AtChatRouter {
 		} else if (this.rawMessage.hasChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
-			this.sendChannelUpdateNotice();
 			recordChannel(this.sender, this.channel);
+			notifyRecordedChannel(this.sender);
 			
 		}
-	}
-	
-	private void sendChannelUpdateNotice() {
-		this.sender.sendMessage(Text.builder("Now chatting ").append(this.channel.channelText()).build());
 	}
 	
 	private void sendMessage() {
@@ -63,6 +60,11 @@ public class AtChatRouter {
 				.append(this.channel.channelText())
 				.append(this.rawMessage.toText())
 				.build();
+	}
+	
+	public static void notifyRecordedChannel(Player sender) {
+		AtChatChannel channel = recallChannel(sender);
+		sender.sendMessage(Text.builder("Now chatting ").append(channel.channelText()).build());
 	}
 	
 	private static AtChatChannel recallChannel(Player sender) {
