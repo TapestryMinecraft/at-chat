@@ -10,6 +10,7 @@ import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
 
 import io.github.tapestryminecraft.atchat.channels.AtChatChannel;
+import io.github.tapestryminecraft.atchat.channels.InvalidChannel;
 
 public class AtChatRouter {
 	
@@ -34,7 +35,11 @@ public class AtChatRouter {
 		if (this.rawMessage.hasBody() && this.rawMessage.hasChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
-			this.sendMessage();
+			if (this.channel instanceof InvalidChannel) {
+				this.notifyInvalidChannel();
+			} else {
+				this.sendMessage();
+			}
 			
 		} else if (this.rawMessage.hasBody()) {
 			
@@ -44,8 +49,13 @@ public class AtChatRouter {
 		} else if (this.rawMessage.hasChannel()) {
 			
 			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
-			recordChannel(this.sender, this.channel);
-			notifyRecordedChannel(this.sender);
+
+			if (this.channel instanceof InvalidChannel) {
+				this.notifyInvalidChannel();
+			} else {
+				recordChannel(this.sender, this.channel);
+				notifyRecordedChannel(this.sender);
+			}
 			
 		}
 	}
@@ -60,6 +70,10 @@ public class AtChatRouter {
 				.append(this.channel.channelText())
 				.append(this.rawMessage.toText())
 				.build();
+	}
+	
+	private void notifyInvalidChannel() {
+		this.sender.sendMessage(Text.builder("Cannot chat ").append(this.channel.channelText()).build());
 	}
 	
 	public static void notifyRecordedChannel(Player sender) {

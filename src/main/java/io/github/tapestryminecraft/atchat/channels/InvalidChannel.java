@@ -23,7 +23,7 @@ public class InvalidChannel extends AtChatChannel {
 
 	@Override
 	protected String channelString() {
-		return this.channelName + " (invalid)";
+		return this.channelName;
 	}
 
 }
