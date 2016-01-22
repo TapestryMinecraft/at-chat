@@ -51,4 +51,8 @@ public class PlayerChannel extends AtChatChannel{
 	protected TextColor senderColor() {
 		return TextColors.LIGHT_PURPLE;
 	}
+	
+	public static String asdf(){
+		return "asdf";
+	}
 }

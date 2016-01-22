@@ -1,8 +1,5 @@
 package io.github.tapestryminecraft.atchat.channels;
 
-import java.util.Optional;
-
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -41,22 +38,5 @@ public abstract class AtChatChannel implements MessageChannel{
 	
 	protected TextColor senderColor() {
 		return TextColors.RESET;
-	}
-
-	public static AtChatChannel fromChannelString(Player sender, String channelString) {
-		if (channelString.length() > 3) {
-			Optional<Player> recipient = Sponge.getServer().getPlayer(channelString);
-			if (recipient.isPresent()) {
-				return new PlayerChannel(sender, recipient.get());
-			} else {
-				return new InvalidChannel(sender, channelString);
-			}
-		} else {
-			try {
-				return new RangedChannel(sender, Integer.parseInt(channelString));
-			} catch(NumberFormatException e) {
-				return new InvalidChannel(sender, channelString);
-			}
-		}
 	}
 }

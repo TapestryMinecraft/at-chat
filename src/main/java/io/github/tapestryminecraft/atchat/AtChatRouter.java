@@ -5,17 +5,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
 
 import io.github.tapestryminecraft.atchat.channels.AtChatChannel;
 import io.github.tapestryminecraft.atchat.channels.InvalidChannel;
+import io.github.tapestryminecraft.atchat.channels.PlayerChannel;
+import io.github.tapestryminecraft.atchat.channels.RangedChannel;
 
 public class AtChatRouter {
 	
 	// TODO save to database
-	static Map<UUID, AtChatChannel> previousChannels = new HashMap<UUID, AtChatChannel>();
+	static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
+	static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
+	static Map<Class<AtChatChannel>, String> channels = new HashMap<Class<AtChatChannel>, String>();
 	
 	AtChatChannel channel;
 	AtChatMessage rawMessage;
@@ -34,7 +39,7 @@ public class AtChatRouter {
 		
 		if (this.rawMessage.includesBody() && this.rawMessage.includesChannel()) {
 			
-			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
+			this.channel = fromChannelString(this.sender, this.rawMessage.getChannel());
 			if (this.channel instanceof InvalidChannel) {
 				this.notifyInvalidChannel();
 			} else {
@@ -48,7 +53,7 @@ public class AtChatRouter {
 			
 		} else if (this.rawMessage.includesChannel()) {
 			
-			this.channel = AtChatChannel.fromChannelString(this.sender, this.rawMessage.getChannel());
+			this.channel = fromChannelString(this.sender, this.rawMessage.getChannel());
 
 			if (this.channel instanceof InvalidChannel) {
 				this.notifyInvalidChannel();
@@ -82,7 +87,7 @@ public class AtChatRouter {
 	}
 	
 	private static AtChatChannel recallChannel(Player sender) {
-		AtChatChannel channel = previousChannels.get(sender.getUniqueId());
+		AtChatChannel channel = savedChannels.get(sender.getUniqueId());
 		if (channel == null) {
 			recordChannel(sender, channel = defaultChannel(sender));
 		}
@@ -90,10 +95,31 @@ public class AtChatRouter {
 	}	
 	
 	private static void recordChannel(Player sender, AtChatChannel channel) {
-		previousChannels.put(sender.getUniqueId(), channel);
+		savedChannels.put(sender.getUniqueId(), channel);
 	}
 	
 	private static AtChatChannel defaultChannel(Player sender) {
-		return AtChatChannel.fromChannelString(sender, "5");
+		return fromChannelString(sender, "5");
+	}
+	
+//	public static void registerChannel(Class<AtChatChannel> channel, String matcher) {
+//		channels.put((Class<AtChatChannel>) channel, matcher);
+//	}
+
+	public static AtChatChannel fromChannelString(Player sender, String channelString) {
+		if (channelString.length() > 3) {
+			Optional<Player> recipient = Sponge.getServer().getPlayer(channelString);
+			if (recipient.isPresent()) {
+				return new PlayerChannel(sender, recipient.get());
+			} else {
+				return new InvalidChannel(sender, channelString);
+			}
+		} else {
+			try {
+				return new RangedChannel(sender, Integer.parseInt(channelString));
+			} catch(NumberFormatException e) {
+				return new InvalidChannel(sender, channelString);
+			}
+		}
 	}
 }
