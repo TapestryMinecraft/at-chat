@@ -17,6 +17,7 @@ public class AtChatRouter {
 	// TODO save to database
 	static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
 	static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
+	// TODO matchers should be stored in order
 	static Map<String, Class<?>> matchers = new HashMap<String, Class<?>>();
 	
 	AtChatChannel channel;
@@ -97,7 +98,9 @@ public class AtChatRouter {
 	}	
 	
 	private static void recordChannel(Player sender, AtChatChannel channel) {
-		savedChannels.put(sender.getUniqueId(), channel);
+		if (!(channel instanceof InvalidChannel)) {
+			savedChannels.put(sender.getUniqueId(), channel);
+		}
 	}
 	
 	private static AtChatChannel defaultChannel(Player sender) {
@@ -106,21 +109,15 @@ public class AtChatRouter {
 
 	private static AtChatChannel fromChannelString(Player sender, String channelString) {
 		Class<?> c = matchChannel(channelString);
-		if (c == null) {
-			return null;
-		}
-		
-		AtChatChannel channel = null;
 		
 		try {
-			channel = (AtChatChannel) c.getDeclaredConstructor(Player.class, String.class).newInstance(sender, channelString);
+			return (AtChatChannel) c.getDeclaredConstructor(Player.class, String.class).newInstance(sender, channelString);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
-			// TODO Auto-generated catch block
+			// TODO catch channel-specific errors
 			e.printStackTrace();
+			return new InvalidChannel(sender, channelString);
 		}
-		
-		return channel;
 	}
 	
 	private static Class<?> matchChannel(String channelString) {
@@ -129,6 +126,6 @@ public class AtChatRouter {
 				return matchers.get(matcher);
 			}
 		}
-		return null;
+		return InvalidChannel.class;
 	}
 }
