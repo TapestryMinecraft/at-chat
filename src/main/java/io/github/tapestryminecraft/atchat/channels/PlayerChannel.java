@@ -11,11 +11,14 @@ import org.spongepowered.api.text.channel.MessageReceiver;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 
+import io.github.tapestryminecraft.atchat.AtChatChannel;
+
 public class PlayerChannel extends AtChatChannel{
 	private String recipientName;
 	private UUID recipientId;
 	
-	public PlayerChannel(Player sender, Player recipient) {
+	public PlayerChannel(Player sender, String channelString) {
+		Player recipient = Sponge.getServer().getPlayer(channelString).get();
 		this.sender = sender;
 		this.recipientId = recipient.getUniqueId();
 		this.recipientName = recipient.getName();
@@ -38,10 +41,6 @@ public class PlayerChannel extends AtChatChannel{
 		return this.recipientName;
 	}
 	
-//	public boolean isValid() {
-//		return this.recipient.isOnline();
-//	}
-	
 	@Override
 	protected TextColor channelColor() {
 		return TextColors.LIGHT_PURPLE;
@@ -50,9 +49,5 @@ public class PlayerChannel extends AtChatChannel{
 	@Override
 	protected TextColor senderColor() {
 		return TextColors.LIGHT_PURPLE;
-	}
-	
-	public static String asdf(){
-		return "asdf";
 	}
 }

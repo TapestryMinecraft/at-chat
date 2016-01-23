@@ -13,10 +13,13 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import io.github.tapestryminecraft.atchat.AtChatChannel;
+
 public class RangedChannel extends AtChatChannel {
 	private int range;
 	
-	public RangedChannel(Player sender, int range) {
+	public RangedChannel(Player sender, String channelString) {
+		int range = Integer.parseInt(channelString);
 		this.sender = sender;
 		this.range = Math.abs(range);
 	}

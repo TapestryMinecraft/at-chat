@@ -1,4 +1,4 @@
-package io.github.tapestryminecraft.atchat.channels;
+package io.github.tapestryminecraft.atchat;
 
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -28,6 +28,17 @@ public abstract class AtChatChannel implements MessageChannel{
 				TextActions.suggestCommand(channelString),
 				channelString
 				);
+	}
+	
+	public void sendMessage(Text message) {
+		this.send(message);
+		this.onSend(message);
+	}
+	
+	protected void onSend(Text message) {
+		// override this method to execute additional functions when message is sent
+		// do nothing by default
+		return;
 	}
 
 	protected abstract String channelString();

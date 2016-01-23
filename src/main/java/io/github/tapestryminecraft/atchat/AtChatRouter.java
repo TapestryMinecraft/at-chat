@@ -1,26 +1,23 @@
 package io.github.tapestryminecraft.atchat;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
 
-import io.github.tapestryminecraft.atchat.channels.AtChatChannel;
 import io.github.tapestryminecraft.atchat.channels.InvalidChannel;
-import io.github.tapestryminecraft.atchat.channels.PlayerChannel;
-import io.github.tapestryminecraft.atchat.channels.RangedChannel;
 
 public class AtChatRouter {
 	
 	// TODO save to database
 	static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
 	static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
-	static Map<Class<AtChatChannel>, String> channels = new HashMap<Class<AtChatChannel>, String>();
+	static Map<String, Class<?>> matchers = new HashMap<String, Class<?>>();
 	
 	AtChatChannel channel;
 	AtChatMessage rawMessage;
@@ -66,7 +63,7 @@ public class AtChatRouter {
 	}
 	
 	private void sendMessage() {
-		this.channel.send(this.buildMessage());
+		this.channel.sendMessage(this.buildMessage());
 	}
 	
 	private Text buildMessage() {
@@ -86,6 +83,11 @@ public class AtChatRouter {
 		sender.sendMessage(Text.builder("Now chatting ").append(channel.channelText()).build());
 	}
 	
+	public static void registerChannel(Class<?> channel, String matcher) {
+		// TODO channel must extend AtChatChannel
+		matchers.put(matcher, channel);
+	}
+	
 	private static AtChatChannel recallChannel(Player sender) {
 		AtChatChannel channel = savedChannels.get(sender.getUniqueId());
 		if (channel == null) {
@@ -101,25 +103,32 @@ public class AtChatRouter {
 	private static AtChatChannel defaultChannel(Player sender) {
 		return fromChannelString(sender, "5");
 	}
-	
-//	public static void registerChannel(Class<AtChatChannel> channel, String matcher) {
-//		channels.put((Class<AtChatChannel>) channel, matcher);
-//	}
 
-	public static AtChatChannel fromChannelString(Player sender, String channelString) {
-		if (channelString.length() > 3) {
-			Optional<Player> recipient = Sponge.getServer().getPlayer(channelString);
-			if (recipient.isPresent()) {
-				return new PlayerChannel(sender, recipient.get());
-			} else {
-				return new InvalidChannel(sender, channelString);
-			}
-		} else {
-			try {
-				return new RangedChannel(sender, Integer.parseInt(channelString));
-			} catch(NumberFormatException e) {
-				return new InvalidChannel(sender, channelString);
+	private static AtChatChannel fromChannelString(Player sender, String channelString) {
+		Class<?> c = matchChannel(channelString);
+		if (c == null) {
+			return null;
+		}
+		
+		AtChatChannel channel = null;
+		
+		try {
+			channel = (AtChatChannel) c.getDeclaredConstructor(Player.class, String.class).newInstance(sender, channelString);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return channel;
+	}
+	
+	private static Class<?> matchChannel(String channelString) {
+		for(String matcher : matchers.keySet()) {
+			if (channelString.matches(matcher)) {
+				return matchers.get(matcher);
 			}
 		}
+		return null;
 	}
 }

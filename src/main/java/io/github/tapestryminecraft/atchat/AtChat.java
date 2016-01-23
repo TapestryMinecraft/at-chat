@@ -12,12 +12,18 @@ import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 
+import io.github.tapestryminecraft.atchat.channels.PlayerChannel;
+import io.github.tapestryminecraft.atchat.channels.RangedChannel;
+
 @Plugin(id = "atchat", name = "AtChat", version = "0")
 public class AtChat {
 	
 	@Listener
 	public void onServerStart(GameStartedServerEvent event) {
 		// TODO load or setup database
+		// TODO disable default channels in config
+		AtChatRouter.registerChannel(PlayerChannel.class, "[a-zA-Z0-9_]{4,16}");
+		AtChatRouter.registerChannel(RangedChannel.class, "\\d{1,3}");
 	}
 	
 	@Listener
