@@ -15,10 +15,11 @@ import io.github.tapestryminecraft.atchat.channels.InvalidChannel;
 public class AtChatRouter {
 	
 	// TODO save to database
-	static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
-	static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
+	private static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
+	// TODO save lastUsedChannels for @@ or @re or @_ syntax
+//	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
 	// TODO matchers should be stored in order
-	static Map<String, Class<?>> matchers = new HashMap<String, Class<?>>();
+	private static Map<String, Class<?>> matchers = new HashMap<String, Class<?>>();
 	
 	AtChatChannel channel;
 	AtChatMessage rawMessage;
@@ -85,7 +86,6 @@ public class AtChatRouter {
 	}
 	
 	public static void registerChannel(Class<?> channel, String matcher) {
-		// TODO channel must extend AtChatChannel
 		matchers.put(matcher, channel);
 	}
 	

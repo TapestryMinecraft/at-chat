@@ -22,8 +22,8 @@ public class AtChat {
 	public void onServerStart(GameStartedServerEvent event) {
 		// TODO load or setup database
 		// TODO disable default channels in config
-		AtChatRouter.registerChannel(PlayerChannel.class, "[a-zA-Z0-9_]{4,16}");
-		AtChatRouter.registerChannel(RangedChannel.class, "\\d{1,3}");
+		registerChannel(PlayerChannel.class, "[a-zA-Z0-9_]{4,16}");
+		registerChannel(RangedChannel.class, "\\d{1,3}");
 	}
 	
 	@Listener
@@ -51,6 +51,16 @@ public class AtChat {
 					completions.add("@" + player.getName());
 				}
 			}
+		}
+	}
+	
+	public static void registerChannel(Class<?> channel, String matcher) {
+		// TODO check for constructor (Player, String)
+		if (AtChatChannel.class.isAssignableFrom(channel)) {
+			AtChatRouter.registerChannel(channel, matcher);
+		} else {
+			// TODO log error, channel must extend AtChatChannel
+			System.out.println("Error registering class: " + channel.getName());
 		}
 	}
 }
