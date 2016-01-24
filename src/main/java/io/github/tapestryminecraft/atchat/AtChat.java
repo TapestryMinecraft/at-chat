@@ -6,6 +6,7 @@ import java.util.List;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.command.TabCompleteEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
@@ -18,7 +19,7 @@ import io.github.tapestryminecraft.atchat.channels.RangedChannel;
 @Plugin(id = "atchat", name = "AtChat", version = "0")
 public class AtChat {
 	
-	@Listener
+	@Listener(order = Order.EARLY)
 	public void onServerStart(GameStartedServerEvent event) {
 		// TODO load or setup database
 		// TODO disable default channels in config
@@ -55,12 +56,15 @@ public class AtChat {
 	}
 	
 	public static void registerChannel(Class<?> channel, String matcher) {
-		// TODO check for constructor (Player, String)
+		String className = channel.getName();
 		if (AtChatChannel.class.isAssignableFrom(channel)) {
 			AtChatRouter.registerChannel(channel, matcher);
+			// TODO log channel registration
+			System.out.println("Registering channel: " + className);
 		} else {
 			// TODO log error, channel must extend AtChatChannel
-			System.out.println("Error registering class: " + channel.getName());
+			// TODO also check for constructor (Player, String)
+			System.out.println("Error registering channel: " + className);
 		}
 	}
 }
