@@ -1,5 +1,6 @@
 package io.github.tapestryminecraft.atchat;
 
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,8 +61,8 @@ public class AtChat {
 		String className = channel.getName();
 		
 		try {
-			channel.getDeclaredConstructor(Player.class, String.class);
-			AtChatRouter.registerChannel(channel, matcher);
+			Constructor<? extends AtChatChannel> constructor = channel.getDeclaredConstructor(Player.class, String.class);
+			AtChatRouter.registerConstructor(constructor, matcher);
 			// TODO log channel registration
 			System.out.println("Registering channel: " + className);
 		} catch (NoSuchMethodException | SecurityException e) {

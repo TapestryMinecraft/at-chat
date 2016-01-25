@@ -1,5 +1,6 @@
 package io.github.tapestryminecraft.atchat;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,11 +20,10 @@ public class AtChatRouter {
 	private static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
 	// TODO save lastUsedChannels for @@ or @re or @_ syntax
 //	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
-	// TODO matchers should be stored in order
-	private static Map<String, Class<? extends AtChatChannel>> matchers = new LinkedHashMap<String, Class<? extends AtChatChannel>>();
+	private static Map<String, Constructor<? extends AtChatChannel>> matchers = new LinkedHashMap<String, Constructor<? extends AtChatChannel>>();
 	
 	AtChatChannel channel;
-	AtChatMessage rawMessage;
+	AtChatMessage message;
 	Player sender;
 	
 	public AtChatRouter(MessageChannelEvent.Chat event) {
@@ -35,33 +35,14 @@ public class AtChatRouter {
 		}
 		this.sender = player.get();
 		
-		this.rawMessage = new AtChatMessage(event.getRawMessage());
+		this.message = new AtChatMessage(event.getRawMessage());
 		
-		if (this.rawMessage.includesBody() && this.rawMessage.includesChannel()) {
-			
-			this.channel = fromChannelString(this.sender, this.rawMessage.getChannel());
-			if (this.channel instanceof InvalidChannel) {
-				this.notifyInvalidChannel();
-			} else {
-				this.sendMessage();
-			}
-			
-		} else if (this.rawMessage.includesBody()) {
-			
-			this.channel = recallChannel(this.sender);
-			this.sendMessage();
-			
-		} else if (this.rawMessage.includesChannel()) {
-			
-			this.channel = fromChannelString(this.sender, this.rawMessage.getChannel());
-
-			if (this.channel instanceof InvalidChannel) {
-				this.notifyInvalidChannel();
-			} else {
-				recordChannel(this.sender, this.channel);
-				notifyRecordedChannel(this.sender);
-			}
-			
+		if (this.message.includesBody() && this.message.includesChannel()) {
+			this.routeBodyAndChannel();
+		} else if (this.message.includesBody()) {
+			this.routeBody();
+		} else if (this.message.includesChannel()) {
+			this.routeChannel();
 		}
 	}
 	
@@ -73,7 +54,7 @@ public class AtChatRouter {
 		return Text.builder()
 				.append(this.channel.senderText())
 				.append(this.channel.channelText())
-				.append(this.rawMessage.toText())
+				.append(this.message.toText())
 				.build();
 	}
 	
@@ -81,13 +62,38 @@ public class AtChatRouter {
 		this.sender.sendMessage(Text.builder("Cannot chat ").append(this.channel.channelText()).build());
 	}
 	
+	private void routeBody() {
+		this.channel = recallChannel(this.sender);
+		this.sendMessage();
+	}
+	
+	private void routeBodyAndChannel() {
+		this.channel = fromChannelString(this.sender, this.message.getChannel());
+		if (this.channel instanceof InvalidChannel) {
+			this.notifyInvalidChannel();
+		} else {
+			this.sendMessage();
+		}
+	}
+	
+	private void routeChannel() {
+		this.channel = fromChannelString(this.sender, this.message.getChannel());
+
+		if (this.channel instanceof InvalidChannel) {
+			this.notifyInvalidChannel();
+		} else {
+			recordChannel(this.sender, this.channel);
+			notifyRecordedChannel(this.sender);
+		}
+	}
+	
 	public static void notifyRecordedChannel(Player sender) {
 		AtChatChannel channel = recallChannel(sender);
 		sender.sendMessage(Text.builder("Now chatting ").append(channel.channelText()).build());
 	}
 	
-	public static void registerChannel(Class<? extends AtChatChannel> channel, String matcher) {
-		matchers.put(matcher, channel);
+	public static void registerConstructor(Constructor<? extends AtChatChannel> constructor, String matcher) {
+		matchers.put(matcher, constructor);
 	}
 	
 	private static AtChatChannel recallChannel(Player sender) {
@@ -109,24 +115,29 @@ public class AtChatRouter {
 	}
 
 	private static AtChatChannel fromChannelString(Player sender, String channelString) {
-		Class<?> c = matchChannel(channelString);
+		Constructor<? extends AtChatChannel> c = matchChannel(channelString);
+		
+		if (c == null) {
+			// no match for channel string
+			return new InvalidChannel(sender, channelString);
+		}
 		
 		try {
-			return (AtChatChannel) c.getDeclaredConstructor(Player.class, String.class).newInstance(sender, channelString);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
+			return (AtChatChannel) c.newInstance(sender, channelString);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException  e) {
 			// TODO catch channel-specific errors
 			e.printStackTrace();
+			// channel string matches, but is invalid
 			return new InvalidChannel(sender, channelString);
 		}
 	}
 	
-	private static Class<? extends AtChatChannel> matchChannel(String channelString) {
+	private static Constructor<? extends AtChatChannel> matchChannel(String channelString) {
 		for(String matcher : matchers.keySet()) {
 			if (channelString.matches(matcher)) {
 				return matchers.get(matcher);
 			}
 		}
-		return InvalidChannel.class;
+		return null;
 	}
 }
