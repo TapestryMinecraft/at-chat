@@ -2,6 +2,7 @@ package io.github.tapestryminecraft.atchat;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public class AtChatRouter {
 	// TODO save lastUsedChannels for @@ or @re or @_ syntax
 //	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
 	// TODO matchers should be stored in order
-	private static Map<String, Class<?>> matchers = new HashMap<String, Class<?>>();
+	private static Map<String, Class<? extends AtChatChannel>> matchers = new LinkedHashMap<String, Class<? extends AtChatChannel>>();
 	
 	AtChatChannel channel;
 	AtChatMessage rawMessage;
@@ -85,7 +86,7 @@ public class AtChatRouter {
 		sender.sendMessage(Text.builder("Now chatting ").append(channel.channelText()).build());
 	}
 	
-	public static void registerChannel(Class<?> channel, String matcher) {
+	public static void registerChannel(Class<? extends AtChatChannel> channel, String matcher) {
 		matchers.put(matcher, channel);
 	}
 	
@@ -120,7 +121,7 @@ public class AtChatRouter {
 		}
 	}
 	
-	private static Class<?> matchChannel(String channelString) {
+	private static Class<? extends AtChatChannel> matchChannel(String channelString) {
 		for(String matcher : matchers.keySet()) {
 			if (channelString.matches(matcher)) {
 				return matchers.get(matcher);

@@ -55,15 +55,18 @@ public class AtChat {
 		}
 	}
 	
-	public static void registerChannel(Class<?> channel, String matcher) {
+	public static void registerChannel(Class<? extends AtChatChannel> channel, String matcher) {
+		
 		String className = channel.getName();
-		if (AtChatChannel.class.isAssignableFrom(channel)) {
+		
+		try {
+			channel.getDeclaredConstructor(Player.class, String.class);
 			AtChatRouter.registerChannel(channel, matcher);
 			// TODO log channel registration
 			System.out.println("Registering channel: " + className);
-		} else {
-			// TODO log error, channel must extend AtChatChannel
-			// TODO also check for constructor (Player, String)
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO log error
+			e.printStackTrace();
 			System.out.println("Error registering channel: " + className);
 		}
 	}
