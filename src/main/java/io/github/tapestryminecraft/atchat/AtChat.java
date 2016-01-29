@@ -1,6 +1,5 @@
 package io.github.tapestryminecraft.atchat;
 
-import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,8 +23,9 @@ public class AtChat {
 	public void onServerStart(GameStartedServerEvent event) {
 		// TODO load or setup database
 		// TODO disable default channels in config
-		registerChannel(PlayerChannel.class, "[a-zA-Z0-9_]{4,16}");
-		registerChannel(RangedChannel.class, "\\d{1,3}");
+		// TODO use controllers to match previous channels ?
+		this.registerPlayerChannelController();
+		this.registerRangedChannelController();
 	}
 	
 	@Listener
@@ -33,9 +33,10 @@ public class AtChat {
 		new AtChatRouter(event);
 	}
 	
-	@Listener 
+	@Listener
 	public void onPlayerJoin(ClientConnectionEvent.Join event) {
 		Player sender = event.getTargetEntity();
+		// TODO send this message after "[Player] joined the game"; (order = Order.POST) does not work
 		AtChatRouter.notifyRecordedChannel(sender);
 	}
 	
@@ -56,19 +57,31 @@ public class AtChat {
 		}
 	}
 	
-	public static void registerChannel(Class<? extends AtChatChannel> channel, String matcher) {
-		
-		String className = channel.getName();
-		
-		try {
-			Constructor<? extends AtChatChannel> constructor = channel.getDeclaredConstructor(Player.class, String.class);
-			AtChatRouter.registerConstructor(constructor, matcher);
-			// TODO log channel registration
-			System.out.println("Registering channel: " + className);
-		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO log error
-			e.printStackTrace();
-			System.out.println("Error registering channel: " + className);
-		}
+	public void registerChannel(AtChatChannelController factory) {
+		AtChatRouter.registerController(factory);
+	}
+	
+	private void registerPlayerChannelController() {
+		this.registerChannel(new AtChatChannelController(){
+			@Override
+			public String matcher() { return "[a-zA-Z0-9_]{4,16}"; }
+
+			@Override
+			public AtChatChannel channel(Player sender, String channelString) {
+				return new PlayerChannel(sender, channelString);
+			}
+		});
+	}
+	
+	private void registerRangedChannelController() {
+		this.registerChannel(new AtChatChannelController(){
+			@Override
+			public String matcher() { return "\\d{1,3}"; }
+
+			@Override
+			public AtChatChannel channel(Player sender, String channelString) {
+				return new RangedChannel(sender, channelString);
+			}
+		});
 	}
 }

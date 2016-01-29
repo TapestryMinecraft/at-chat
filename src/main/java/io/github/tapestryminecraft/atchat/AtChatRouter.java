@@ -1,9 +1,8 @@
 package io.github.tapestryminecraft.atchat;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +19,7 @@ public class AtChatRouter {
 	private static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
 	// TODO save lastUsedChannels for @@ or @re or @_ syntax
 //	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
-	private static Map<String, Constructor<? extends AtChatChannel>> matchers = new LinkedHashMap<String, Constructor<? extends AtChatChannel>>();
+	private static List<AtChatChannelController> channelControllers = new ArrayList<AtChatChannelController>();
 	
 	AtChatChannel channel;
 	AtChatMessage message;
@@ -62,6 +61,8 @@ public class AtChatRouter {
 		this.sender.sendMessage(Text.builder("Cannot chat ").append(this.channel.channelText()).build());
 	}
 	
+	
+	
 	private void routeBody() {
 		this.channel = recallChannel(this.sender);
 		this.sendMessage();
@@ -87,13 +88,39 @@ public class AtChatRouter {
 		}
 	}
 	
+	
+	
+	
+	
+	private static AtChatChannel defaultChannel(Player sender) {
+		// TODO set default channel in config
+		return fromChannelString(sender, "5");
+	}
+
+	private static AtChatChannel fromChannelString(Player sender, String channelString) {
+		AtChatChannelController controller = matchChannel(channelString);
+		
+		if (controller == null) {
+			// no match for channel string
+			return new InvalidChannel(sender, channelString);
+		}
+		
+		// TODO catch and report channel-specific errors
+		return controller.channel(sender, channelString);
+	}
+	
+	private static AtChatChannelController matchChannel(String channelString) {
+		for(AtChatChannelController controller : channelControllers) {
+			if (channelString.matches(controller.matcher())) {
+				return controller;
+			}
+		}
+		return null;
+	}
+	
 	public static void notifyRecordedChannel(Player sender) {
 		AtChatChannel channel = recallChannel(sender);
 		sender.sendMessage(Text.builder("Now chatting ").append(channel.channelText()).build());
-	}
-	
-	public static void registerConstructor(Constructor<? extends AtChatChannel> constructor, String matcher) {
-		matchers.put(matcher, constructor);
 	}
 	
 	private static AtChatChannel recallChannel(Player sender) {
@@ -110,34 +137,7 @@ public class AtChatRouter {
 		}
 	}
 	
-	private static AtChatChannel defaultChannel(Player sender) {
-		return fromChannelString(sender, "5");
-	}
-
-	private static AtChatChannel fromChannelString(Player sender, String channelString) {
-		Constructor<? extends AtChatChannel> c = matchChannel(channelString);
-		
-		if (c == null) {
-			// no match for channel string
-			return new InvalidChannel(sender, channelString);
-		}
-		
-		try {
-			return (AtChatChannel) c.newInstance(sender, channelString);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException  e) {
-			// TODO catch channel-specific errors
-			e.printStackTrace();
-			// channel string matches, but is invalid
-			return new InvalidChannel(sender, channelString);
-		}
-	}
-	
-	private static Constructor<? extends AtChatChannel> matchChannel(String channelString) {
-		for(String matcher : matchers.keySet()) {
-			if (channelString.matches(matcher)) {
-				return matchers.get(matcher);
-			}
-		}
-		return null;
+	public static void registerController(AtChatChannelController controller) {
+		channelControllers.add(controller);
 	}
 }

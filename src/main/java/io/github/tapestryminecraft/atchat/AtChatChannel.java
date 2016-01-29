@@ -9,36 +9,38 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 
 public abstract class AtChatChannel implements MessageChannel{
-	protected Player sender;
 	
-	public Text senderText() {
+	protected String channelString;
+	protected Player sender;
+
+	public AtChatChannel() {}
+	
+	public AtChatChannel(Player sender, String channelString) {
+		this.sender = sender;
+		this.channelString = channelString;
+	}
+
+	public final Text senderText() {
 		return Text.of(
-				this.senderColor(),
-				TextStyles.RESET,
-				TextActions.suggestCommand("@" + this.sender.getName() + " "),
-				"[" + this.sender.getName() + "] "
-				);
+			this.senderColor(),
+			TextStyles.RESET,
+			TextActions.suggestCommand("@" + this.sender.getName() + " "),
+			"[" + this.sender.getName() + "] "
+		);
 	}
 	
-	public Text channelText() {
+	public final Text channelText() {
 		String channelString = "@" + this.channelString() + " ";
 		return Text.of(
-				this.channelColor(),
-				TextStyles.ITALIC,
-				TextActions.suggestCommand(channelString),
-				channelString
-				);
+			this.channelColor(),
+			TextStyles.ITALIC,
+			TextActions.suggestCommand(channelString),
+			channelString
+		);
 	}
 	
 	public void sendMessage(Text message) {
 		this.send(message);
-		this.onSend(message);
-	}
-	
-	protected void onSend(Text message) {
-		// override this method to execute additional functions when message is sent
-		// do nothing by default
-		return;
 	}
 
 	protected abstract String channelString();
