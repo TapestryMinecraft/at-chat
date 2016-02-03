@@ -1,6 +1,8 @@
 # AtChat
 
-Chat with Minecraft players using the internet-friendly "@" syntax.
+Chat with Minecraft players on any [Sponge][spongepowered] server, using the internet-friendly "@" syntax.
+
+[spongepowered]: https://spongepowered.org/
 
 ## Channels
 
