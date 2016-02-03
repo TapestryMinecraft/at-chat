@@ -17,6 +17,7 @@ import io.github.tapestryminecraft.atchat.AtChatChannel;
 
 public class RangedChannel extends AtChatChannel {
 	private int range;
+	private Player sender;
 	
 	public RangedChannel(Player sender, String channelString) {
 		int range = Integer.parseInt(channelString);
@@ -51,8 +52,13 @@ public class RangedChannel extends AtChatChannel {
 	}
 
 	@Override
-	public String channelString() {
+	public String getChannelString() {
 		return Integer.toString(this.range);
+	}
+
+	@Override
+	protected Player getSender() {
+		return this.sender;
 	}
 	
 	private double distance(int x1, int x2, int z1, int z2) {

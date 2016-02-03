@@ -16,6 +16,7 @@ import io.github.tapestryminecraft.atchat.AtChatChannel;
 public class PlayerChannel extends AtChatChannel{
 	private String recipientName;
 	private UUID recipientId;
+	private Player sender;
 	
 	public PlayerChannel(Player sender, String channelString) {
 		Player recipient = Sponge.getServer().getPlayer(channelString).get();
@@ -37,8 +38,13 @@ public class PlayerChannel extends AtChatChannel{
 	}
 
 	@Override
-	public String channelString() {
+	public String getChannelString() {
 		return this.recipientName;
+	}
+
+	@Override
+	protected Player getSender() {
+		return this.sender;
 	}
 	
 	@Override

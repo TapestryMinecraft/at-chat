@@ -5,18 +5,23 @@ import java.util.Collection;
 import java.util.List;
 
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageReceiver;
 
 import io.github.tapestryminecraft.atchat.AtChatChannel;
 
 public class InvalidChannel extends AtChatChannel {
-	String channelName;
+	private Player sender;
+	private String channelName;
+	private String error;
 	
-	public InvalidChannel(Player sender, String channelName) {
+	public InvalidChannel(Player sender, String channelName, String error) {
 		this.channelName = channelName;
 		this.sender = sender;
+		this.error = error;
 	}
 
+	@Override
 	public Collection<MessageReceiver> getMembers() {
 		List<MessageReceiver> list = new ArrayList<MessageReceiver>();
 		list.add(this.sender);
@@ -24,8 +29,17 @@ public class InvalidChannel extends AtChatChannel {
 	}
 
 	@Override
-	protected String channelString() {
+	protected String getChannelString() {
 		return this.channelName;
 	}
 
+	@Override
+	protected Player getSender() {
+		return this.sender;
+	}
+
+	@Override
+	public void sendMessage(Text message) {
+		this.send(Text.of(this.error));
+	}
 }

@@ -24,6 +24,7 @@ public class AtChat {
 		// TODO load or setup database
 		// TODO disable default channels in config
 		// TODO use controllers to match previous channels ?
+		this.registerLastUsedChannelController();
 		this.registerPlayerChannelController();
 		this.registerRangedChannelController();
 	}
@@ -44,31 +45,62 @@ public class AtChat {
 	public void onTabComplete(TabCompleteEvent.Chat event) {
 		AtChatMessage message = new AtChatMessage(event.getRawMessage());
 		
-		if (message.signalsChannel() && !message.signalsBody() ) {
-			List<String> completions = event.getTabCompletions();
+		if (!message.isAtChatMessage()) {
+			return;
+		}
+		
+		String channelTag = message.getTag();
+		AtChatChannelController controller = AtChatRouter.matchChannelController(channelTag);
+		List<String> completions = event.getTabCompletions();
+		
+		if (controller == null) {
+			// by default, suggest player names
 			completions.clear();
+
 			Collection<Player> players = Sponge.getServer().getOnlinePlayers();
 			
 			for (Player player : players) {
-				if (player.getName().toLowerCase().startsWith(message.getChannel().toLowerCase())) {
+				if (player.getName().toLowerCase().startsWith(channelTag.toLowerCase())) {
 					completions.add("@" + player.getName());
 				}
 			}
+		} else {
+			controller.tabCompletions(completions, message);
 		}
 	}
 	
-	public void registerChannel(AtChatChannelController factory) {
-		AtChatRouter.registerController(factory);
+	public void registerChannel(AtChatChannelController controller) {
+		AtChatRouter.registerController(controller);
+	}
+	
+	private void registerLastUsedChannelController() {
+		this.registerChannel(new AtChatChannelController(){
+
+			@Override
+			public int argumentCount() { return 1; }
+
+			@Override
+			public String matcher() { return "@"; }
+
+			@Override
+			public AtChatChannel channel(Player sender, AtChatMessage message) {
+				return AtChatRouter.recallLastUsedChannel(sender);
+			}
+			
+		});
 	}
 	
 	private void registerPlayerChannelController() {
 		this.registerChannel(new AtChatChannelController(){
 			@Override
+			public int argumentCount() { return 1; }
+			
+			@Override
 			public String matcher() { return "[a-zA-Z0-9_]{4,16}"; }
 
 			@Override
-			public AtChatChannel channel(Player sender, String channelString) {
-				return new PlayerChannel(sender, channelString);
+			public AtChatChannel channel(Player sender, AtChatMessage message) {
+				return new PlayerChannel(sender, message.getTag());
 			}
 		});
 	}
@@ -76,11 +108,14 @@ public class AtChat {
 	private void registerRangedChannelController() {
 		this.registerChannel(new AtChatChannelController(){
 			@Override
+			public int argumentCount() { return 1; }
+			
+			@Override
 			public String matcher() { return "\\d{1,3}"; }
 
 			@Override
-			public AtChatChannel channel(Player sender, String channelString) {
-				return new RangedChannel(sender, channelString);
+			public AtChatChannel channel(Player sender, AtChatMessage message) {
+				return new RangedChannel(sender, message.getTag());
 			}
 		});
 	}

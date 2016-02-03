@@ -9,28 +9,18 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 
 public abstract class AtChatChannel implements MessageChannel{
-	
-	protected String channelString;
-	protected Player sender;
-
-	public AtChatChannel() {}
-	
-	public AtChatChannel(Player sender, String channelString) {
-		this.sender = sender;
-		this.channelString = channelString;
-	}
 
 	public final Text senderText() {
 		return Text.of(
 			this.senderColor(),
 			TextStyles.RESET,
-			TextActions.suggestCommand("@" + this.sender.getName() + " "),
-			"[" + this.sender.getName() + "] "
+			TextActions.suggestCommand("@" + this.getSender().getName() + " "),
+			"[" + this.getSender().getName() + "] "
 		);
 	}
 	
 	public final Text channelText() {
-		String channelString = "@" + this.channelString() + " ";
+		String channelString = "@" + this.getChannelString() + " ";
 		return Text.of(
 			this.channelColor(),
 			TextStyles.ITALIC,
@@ -43,7 +33,9 @@ public abstract class AtChatChannel implements MessageChannel{
 		this.send(message);
 	}
 
-	protected abstract String channelString();
+	protected abstract String getChannelString();
+	
+	protected abstract Player getSender();
 	
 	protected TextColor channelColor() {
 		return TextColors.RESET;

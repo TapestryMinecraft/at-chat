@@ -17,10 +17,10 @@ public class AtChatRouter {
 	
 	// TODO save to database
 	private static Map<UUID, AtChatChannel> savedChannels = new HashMap<UUID, AtChatChannel>();
-	// TODO save lastUsedChannels for @@ or @re or @_ syntax
-//	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
+	private static Map<UUID, AtChatChannel> lastUsedChannels = new HashMap<UUID, AtChatChannel>();
 	private static List<AtChatChannelController> channelControllers = new ArrayList<AtChatChannelController>();
 	
+	AtChatChannelController controller;
 	AtChatChannel channel;
 	AtChatMessage message;
 	Player sender;
@@ -35,13 +35,21 @@ public class AtChatRouter {
 		this.sender = player.get();
 		
 		this.message = new AtChatMessage(event.getRawMessage());
-		
-		if (this.message.includesBody() && this.message.includesChannel()) {
-			this.routeBodyAndChannel();
-		} else if (this.message.includesBody()) {
+
+		if (this.message.isAtChatMessage()) {
+			
+			this.controller = matchChannelController(this.message.getTag());
+			
+			if (this.message.getArguments().length > this.controller.argumentCount()) {
+				this.routeBodyAndChannel();
+			} else if (this.message.getArguments().length < this.controller.argumentCount()){
+				this.sender.sendMessage(Text.of("Not enough arguments for @" + message.getTag()));
+			} else {
+				this.routeChannel();
+			}
+			
+		} else {
 			this.routeBody();
-		} else if (this.message.includesChannel()) {
-			this.routeChannel();
 		}
 	}
 	
@@ -53,7 +61,7 @@ public class AtChatRouter {
 		return Text.builder()
 				.append(this.channel.senderText())
 				.append(this.channel.channelText())
-				.append(this.message.toText())
+				.append(this.message.toText(this.controller == null ? 0 : this.controller.argumentCount()))
 				.build();
 	}
 	
@@ -61,24 +69,23 @@ public class AtChatRouter {
 		this.sender.sendMessage(Text.builder("Cannot chat ").append(this.channel.channelText()).build());
 	}
 	
-	
-	
 	private void routeBody() {
 		this.channel = recallChannel(this.sender);
 		this.sendMessage();
 	}
 	
 	private void routeBodyAndChannel() {
-		this.channel = fromChannelString(this.sender, this.message.getChannel());
+		this.channel = generateChannel(this.sender, this.message);
 		if (this.channel instanceof InvalidChannel) {
 			this.notifyInvalidChannel();
 		} else {
+			recordLastUsedChannel(this.sender, this.channel);
 			this.sendMessage();
 		}
 	}
 	
 	private void routeChannel() {
-		this.channel = fromChannelString(this.sender, this.message.getChannel());
+		this.channel = generateChannel(this.sender, this.message);
 
 		if (this.channel instanceof InvalidChannel) {
 			this.notifyInvalidChannel();
@@ -94,24 +101,24 @@ public class AtChatRouter {
 	
 	private static AtChatChannel defaultChannel(Player sender) {
 		// TODO set default channel in config
-		return fromChannelString(sender, "5");
+		return generateChannel(sender, new AtChatMessage("@5"));
 	}
 
-	private static AtChatChannel fromChannelString(Player sender, String channelString) {
-		AtChatChannelController controller = matchChannel(channelString);
+	private static AtChatChannel generateChannel(Player sender, AtChatMessage message) {
+		String channelTag = message.getTag();
+		AtChatChannelController controller = matchChannelController(channelTag);
 		
 		if (controller == null) {
-			// no match for channel string
-			return new InvalidChannel(sender, channelString);
+			return new InvalidChannel(sender, channelTag, "Invalid channel tag");
 		}
 		
 		// TODO catch and report channel-specific errors
-		return controller.channel(sender, channelString);
+		return controller.channel(sender, message);
 	}
 	
-	private static AtChatChannelController matchChannel(String channelString) {
+	public static AtChatChannelController matchChannelController(String channelTag) {
 		for(AtChatChannelController controller : channelControllers) {
-			if (channelString.matches(controller.matcher())) {
+			if (channelTag.matches(controller.matcher())) {
 				return controller;
 			}
 		}
@@ -129,11 +136,25 @@ public class AtChatRouter {
 			recordChannel(sender, channel = defaultChannel(sender));
 		}
 		return channel;
-	}	
+	}
+
+	public static AtChatChannel recallLastUsedChannel(Player sender) {
+		AtChatChannel channel = lastUsedChannels.get(sender.getUniqueId());
+		if (channel == null) {
+			recordLastUsedChannel(sender, channel = defaultChannel(sender));
+		}
+		return channel;
+	}
 	
 	private static void recordChannel(Player sender, AtChatChannel channel) {
 		if (!(channel instanceof InvalidChannel)) {
 			savedChannels.put(sender.getUniqueId(), channel);
+		}
+	}
+	
+	private static void recordLastUsedChannel(Player sender, AtChatChannel channel) {
+		if (!(channel instanceof InvalidChannel)) {
+			lastUsedChannels.put(sender.getUniqueId(), channel);
 		}
 	}
 	
