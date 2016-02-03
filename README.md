@@ -12,6 +12,10 @@ Use `@PlayerName` to send private messages to a player.
 
 Use `@range`, where range is a number between 1 and 999, to send messages to anyone within a certain chunk radius.
 
+See [Plugins][plugins] for a list of custom channels available as plugins for AtChat.
+
+[plugins]: https://github.com/TapestryMinecraft/at-chat#plugins
+
 ## Interaction
 
 Use the syntax `@ChannelName` to switch to a channel.  Subsequent messages will be sent to that channel.
