@@ -21,7 +21,6 @@ public class InvalidChannel extends AtChatChannel {
 		this.error = error;
 	}
 
-	@Override
 	public Collection<MessageReceiver> getMembers() {
 		List<MessageReceiver> list = new ArrayList<MessageReceiver>();
 		list.add(this.sender);
